@@ -33,7 +33,6 @@ suppressMessages(library( fields))
 
 ## Sensible factor levels for smoking
 ```{r}
-table(lungcap$Smoke)
 lungcap$Smoke <-factor( lungcap$Smoke, 
                         levels=c(0,1),
                         labels=c("NS", "S" )
@@ -60,18 +59,13 @@ Now reproduce these by hand to show how the categorical variables,
 Gender and Smoker actually enter the model 
 
 ```{r}
-# y = XBeta + epsilon
 y<- lungcap$FEV
-
-# First col is 1's for constant term
-# Recode the numerics to 0 and 1 instead of 1 and 2
 X<- cbind(1, lungcap$Age, lungcap$Ht,
           as.numeric( lungcap$Smoke) - 1,
           as.numeric( lungcap$Gender) -1)
 head( X,3)
 tail(X,3)
 
-# Very small proportion of smokers
 table( X[,4], X[,5])
 
 ```
@@ -80,12 +74,6 @@ table( X[,4], X[,5])
 
 # The OLS estimates 
 ```{r}
-
-#OLS formula is
-# Betahat = (xtx)^-1 xty
-# xtx = 5x5
-# xty = 5x1
-# solve() inverts a matrix while t() transpose matrix
 betaHat<-  ( solve( t(X)%*%X) ) %*% t(X)%*%y
 
 c(betaHat)
@@ -101,10 +89,10 @@ Agreement with ``` lm ``` results!
 
 Now find the estimate of  $\sigma$, the error  SD. 
 ```{r}
-yHat<- X%*%betaHat    #predicted values from the model
-residuals<- y - yHat     # difference between predicted and observed
-n<- nrow( X)             # num of observations
-p<- ncol( X)             # num of params
+yHat<- X%*%betaHat
+residuals<- y - yHat
+n<- nrow( X)
+p<- ncol( X)
 sigmaHat<- sqrt( sum( residuals^2)/ ( n-p) )
 summary( lmObj)$sigma 
 ```
@@ -118,16 +106,7 @@ SE<- sqrt( diag( covBeta) )
 cbind( betaHat, SE)
 # compare to 
 summary(lmObj)$coefficients[,1:2]
-
-## interpret as conf interval calc
-## SmokeS conf interval is approx -0.087 +- (1.96)(0.05925)
-## Take into account low p value
 ```
-```{r}
-confint(lmObj)
-```
-
-
 \newpage
 
 # Model checking
@@ -158,8 +137,6 @@ Much better!
 
 ## Including an interaction 
 ```{r}
-# Make four different groups for smokers and gender
-# THink of interaction variables as the effect of smoking and alcohol separately vs together. Sleepy separately, deadly together
 lmObj3<- lm( log10(FEV) ~ Age + Ht + Smoke*Gender, data= lungcap )
 summary( lmObj3)$coefficients
 ```

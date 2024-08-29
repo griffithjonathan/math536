@@ -1,0 +1,117 @@
+---
+title: "Exploring WLS"
+author: "Doug Nychka"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+<!--B-->
+WITH SELECTED ANSWERS
+<!--E-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library( fields)
+setwd("~/Dropbox/Home/Teaching/AdvancedStatistics/theCourse/Lectures/Lecture04WLSMonteCarlo")
+source("/Users/nychka/Dropbox/Home/Teaching/AdvancedStatistics/Misc/makeForClass.R")
+```
+
+# Learning objectives
+
+- Know how to fit a weighted least  squares model in R
+
+- Know how to setup a Monte Carlo experiment to evaluate a statistical method for a linear model.
+
+- Be able to use statistics to evaluate the Monte Carlo results. E.g. hypothesis testing for differences.
+
+- Be conversant in the advantages of a WLS over not adjusting for a changing error variance. 
+
+ 
+
+
+# Creating a synthetic data
+
+Regression data set with 20 points but different variances for the errors. 
+```{r}
+n<- 40
+set.seed(222)
+x<- sort(runif(n))
+X<- cbind( 1, x)
+beta<- c( 10,30)
+grp<- c(rep( 1, n/2), rep(2, n/2))
+SD<- c( 1, 3)
+errorSD<- SD[grp]
+e<- rnorm(n)*errorSD
+y<- X%*%beta + e
+
+fields.style()
+plot( x, y, col=grp)
+points( x, X%*%beta, col=3, cex=.5)
+```
+
+## 1 OLS
+Fit an **lm** model and report the estimate and SE for x.
+
+## 2 WLS
+Fit a weighted least squares model using the correct
+variability in the errors (Note: this is  based on an
+*oracle*!).
+The *weights* should be given to **lm** in the units of reciprocal variance. 
+
+
+
+```{r}
+model0<- lm( y ~ X - 1)
+summary( model0)$coefficients
+
+model1<- lm( y ~ X - 1, weights =1/ errorSD^2 )
+summary( model1)$coefficients
+```
+
+Now check out the *weighted* residuals to see if they are better. To do this adjust the raw residuals but the square root of the weights.
+
+
+
+\newpage
+
+## 3 A Monte Carlo Experiment
+  
+Create 1000 synthetic data sets and see what happens with OLS 
+
+```{r}
+set.seed(436)
+# save data in columns of a matrix 
+M<- 1000
+beta2Hat<- rep( NA, M)
+for( k in 1:M){
+E<- rnorm(n)*errorSD
+YFake<- X%*%beta + E
+fit<- lm( YFake~ X-1)
+beta2Hat[k]<- fit$coefficients[2]
+}
+
+hist( beta2Hat, main="OLS slopes from MC data")
+xline( 30, col="red")
+
+```
+
+- What does the "-1" mean in the lm formula?
+Would the results be different if one used the code ```MCOLS<- lm( Y~ x)```?
+
+- Redo Monte Carlo using  WLS and the weights from Problem 2.
+
+- Which seems to be better?  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
